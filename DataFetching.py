@@ -13,43 +13,6 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 
-"""
-server = '192.168.5.29' 
-database = 'sourcepros_07112021' 
-username = 'jeevanshu' 
-password = 'mar@2022' 
-connection_string = 'DRIVER={ODBC Driver 11 for SQL Server}; SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password
-
-@st.cache(ttl=24*60*60)
-def fetch_data(connection_string = connection_string):
-    cnxn = pyodbc.connect(connection_string)
-    Query = "
-    SELECT DISTINCT CM.ClientName, RM.RequirementID, RM.CreatedDate, CAT.CategoryName, Job.JobTitleText, jbt.JobTypeText, RM.IsRemoteLocation,
-    ZCM.ZIPCode,CIM.CityName, sm.StateName
-    FROM DBO.RequirementMaster RM WITH (NOLOCK)
-    LEFT OUTER JOIN RequirementLocation RL WITH (NOLOCK) ON RM.RequirementID = RL.RequirementID
-    LEFT OUTER JOIN AddressMASter AM WITH (NOLOCK) ON RL.AddressID = AM.AddressID
-    LEFT OUTER JOIN ZIPCodeMASter ZCM WITH (NOLOCK) ON AM.ZIPCodeID = ZCM.ZIPCodeID
-    LEFT OUTER JOIN CityMASter CIM WITH (NOLOCK) ON ZCM.CityID = CIM.CityID
-    LEFT OUTER JOIN StateMASter SM WITH (NOLOCK) ON CIM.StateID = SM.StateID
-    LEFT JOIN RequirementUserTxn rmTxn WITH (NOLOCK) ON rmTxn.RequirementID = RM.RequirementID
-    LEFT OUTER JOIN ClientMaster CM WITH (NOLOCK) ON CM.ClientID = RM.ClientID
-    LEFT OUTER JOIN MSPMaster msp With(NOLOCK) on msp.MSPMasterid = cm.MSPMasterid
-    LEFT OUTER JOIN CategoryMaster CAT With(NOLOCK) on CAT.CategoryId = RM.CategoryId
-    LEFT OUTER JOIN ClubMaster Club With(NOLOCK) on CAT.Clubid = Club.Clubid
-    LEFT OUTER JOIN JobTitleMaster job WITH(NOLOCK) on job.JobTitleId = RM.JobTitleId
-    LEFT OUTER JOIN JobTypeMaster jbt WITH(NOLOCK) on jbt.JobTypeId = RM.JobTypeId
-    WHERE CAST(RM.CreatedDate as date) between cast('2014-01-01' as date) and cast('2022-06-30' as date)
-    "
-    #cursor.execute(Query).fetchall()
-    df = pd.read_sql_query(Query, cnxn)
-    df['CreatedDate'] = pd.to_datetime(df['CreatedDate'], format="%Y-%m")
-    df['Date'] = df['CreatedDate'].map(lambda x: '{}-{}'.format(x.year, x.month))
-    
-    return df
-"""
-
-
 def convert_negative(num):
     if num<0:
         return 0
