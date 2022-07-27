@@ -154,7 +154,7 @@ def create_prophet_remote_plot(df, is_remote):
 
     
 
-@st.cache(show_spinner=False,suppress_st_warning=True)
+#@st.cache(show_spinner=False,suppress_st_warning=True)
 def create_city_plot(new_df, city_name):
     new_df = df.groupby(["Date", "CityName"]).count()
     new_df = new_df.reset_index()
@@ -165,7 +165,7 @@ def create_city_plot(new_df, city_name):
     data = new_df[new_df["CityName"]==city_name]
     return create_forecast(data)
 
-@st.cache(show_spinner=False, suppress_st_warning=True)
+#@st.cache(show_spinner=False, suppress_st_warning=True)
 def create_prophet_city_plot(df, city_name):   
     new_df = df.groupby(["Date", "CityName"]).count()
     new_df = new_df.reset_index()
@@ -178,7 +178,7 @@ def create_prophet_city_plot(df, city_name):
     #return st.write("Forecast Plot: ",fig_1) ,st.write("Component Plot: ",fig_2), st.write("RMSE:",rmse)
 
 
-@st.cache(show_spinner=False,suppress_st_warning=True )     
+#@st.cache(show_spinner=False,suppress_st_warning=True )     
 def create_job_title_plot(df, job_title):
     new_df = df.groupby(["Date","JobTitleText"]).count()
     new_df = new_df.reset_index()
@@ -190,7 +190,7 @@ def create_job_title_plot(df, job_title):
     return create_forecast(data)
 
 
-@st.cache(show_spinner=False, suppress_st_warning=True)
+#@st.cache(show_spinner=False, suppress_st_warning=True)
 def create_prophet_jobtitle_plot(df, job_title):
        
     new_df = df.groupby(["Date","JobTitleText"]).count()
@@ -204,7 +204,7 @@ def create_prophet_jobtitle_plot(df, job_title):
     #return st.write("Forecast Plot: ",fig_1) ,st.write("Component Plot: ",fig_2), st.write("RMSE:",rmse)
 
 
-@st.cache(show_spinner=False,suppress_st_warning=True)
+#@st.cache(show_spinner=False,suppress_st_warning=True)
 def create_client_plot(df, client_name):
     
     new_df = df.groupby(["Date", "ClientName", "CategoryName"]).count()
@@ -219,7 +219,7 @@ def create_client_plot(df, client_name):
     return create_forecast(data)
     
 
-@st.cache(show_spinner=False, suppress_st_warning=True)
+#@st.cache(show_spinner=False, suppress_st_warning=True)
 def create_prophet_client_plot(df, client_name):
     new_df = df.groupby(["Date", "ClientName", "CategoryName"]).count()
     new_df = new_df.reset_index()
