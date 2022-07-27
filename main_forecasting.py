@@ -5,8 +5,6 @@ Created on Thu Jul 21 07:00:38 2022
 @author: Jeevanshudua
 """
 
-py -m pip install prophet
-py -m pip install plotly
 
 
 import pandas as pd
