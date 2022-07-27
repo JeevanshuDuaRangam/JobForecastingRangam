@@ -5,7 +5,9 @@ Created on Thu Jul 21 07:00:38 2022
 @author: Jeevanshudua
 """
 
-pip install -r requirements.txt
+py -m pip install prophet
+py -m pip install plotly
+
 
 import pandas as pd
 import streamlit as st
