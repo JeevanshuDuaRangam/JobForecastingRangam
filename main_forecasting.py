@@ -257,7 +257,7 @@ if __name__ == '__main__':
     footer{
     }
        visibility:visible;
-    footer:after{
+        footer:after{
     
         content:'Copyright@2021:Streamlit';
         display:block;
@@ -265,6 +265,15 @@ if __name__ == '__main__':
         color:tomato;
         padding:5px;
         top:3px;
+        
+        viewerBadge_container__1QSob {
+        z-index: 50;
+        font-size: .875rem;
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        display: none;
+}
     }
         </style>
         """
