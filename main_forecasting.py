@@ -252,7 +252,8 @@ if __name__ == '__main__':
     hide_menu_style = """
         <style>
         #MainMenu {visibility: hidden;}
-        
+        footer{visibility:hidden;}
+
     footer{
     }
        visibility:visible;
