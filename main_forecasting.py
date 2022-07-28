@@ -249,7 +249,12 @@ def get_remotedata(ttl=24*60*60):
        
 if __name__ == '__main__':
         
-
+    hide_menu_style = """
+        <style>
+        #MainMenu {visibility: hidden;}
+        </style>
+        """
+    st.markdown(hide_menu_style, unsafe_allow_html=True)
     tab = st.sidebar.selectbox("What do you want to Search ?" ,
                                ("Remote Jobs","Cities", "Job Titles", "Rangam Clients"))
     try:
