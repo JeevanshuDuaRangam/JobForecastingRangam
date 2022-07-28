@@ -28,7 +28,175 @@ def fetch_data():
     
     return df
 
-#@st.cache
+def get_titles_cities(df, city_name):
+    new_df = df.groupby(["Date", "CityName", "JobTitleText"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.loc[:, ["Date", "CityName", "JobTitleText", "RequirementID"]]
+    new_df = new_df[new_df["CityName"]==city_name]
+    new_df = new_df.groupby(["JobTitleText"]).count()
+    new_df = new_df.sort_values(by = "RequirementID", ascending = False)
+    titles = new_df.index.tolist()[:5]
+    return titles
+
+def get_titles_clients(df, client_name):
+    new_df = df.groupby(["Date", "ClientName", "JobTitleText"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.loc[:, ["Date", "ClientName", "JobTitleText", "RequirementID"]]
+    new_df = new_df[new_df["ClientName"]==client_name]
+    new_df = new_df.groupby(["JobTitleText"]).count()
+    new_df = new_df.sort_values(by = "RequirementID", ascending = False)
+    titles = new_df.index.tolist()[:5]
+    return titles
+
+def get_title_remote(df, job_type):
+    new_df = df.groupby(["Date", "IsRemoteLocation"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.drop(['Date',"CreatedDate",'ClientName','CategoryName','CityName', 'ZIPCode', 'StateName',"JobTitleText", "JobTypeText", "ClientName"], axis = 1)
+    if job_type == "Remote Jobs":
+        is_remote = True 
+        new_df = new_df[new_df['IsRemoteLocation']==is_remote]
+        new_df = df.groupby(["Date", "IsRemoteLocation", "JobTitleText"]).count()
+        new_df = new_df.reset_index()
+        new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+        new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+        new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+        new_df = new_df.groupby(["JobTitleText"]).count()
+        new_df = new_df["RequirementID"].sort_values(ascending = False)
+        titles = new_df.index.tolist()[:5]
+    return titles
+
+def get_client_remote(df, job_type):
+    new_df = df.groupby(["Date", "IsRemoteLocation"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.drop(['Date',"CreatedDate",'CategoryName','CityName', 'ZIPCode', 'StateName',"JobTitleText", "JobTypeText", "ClientName"], axis = 1)
+    if job_type == "Remote Jobs":
+        is_remote = True 
+        new_df = new_df[new_df['IsRemoteLocation']==is_remote]
+        new_df = df.groupby(["Date", "IsRemoteLocation","ClientName" ]).count()
+        new_df = new_df.reset_index()
+        new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+        new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+        new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+        new_df = new_df.groupby(["ClientName"]).count()
+        new_df = new_df["RequirementID"].sort_values(ascending = False)
+        city_names = new_df.index.tolist()[:5]
+    return city_names
+    
+
+def create_remote_plot(df, job_type):
+    new_df = df.groupby(["Date", "IsRemoteLocation"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.drop(['Date',"CreatedDate",'ClientName','CategoryName','CityName', 'ZIPCode', 'StateName',"JobTitleText", "JobTypeText", "ClientName"], axis = 1)
+    if job_type == "Remote Jobs":
+        is_remote = True 
+        new_df = new_df[new_df['IsRemoteLocation']==is_remote]
+    elif job_type == "Non-Remote Jobs":
+        is_remote = False 
+        new_df = new_df[new_df['IsRemoteLocation']==is_remote]
+    return create_forecast(new_df)
+    
+
+def create_prophet_remote_plot(df, is_remote):
+    new_df = df.groupby(["Date", "IsRemoteLocation"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.drop(['Date',"CreatedDate",'ClientName','CategoryName','CityName', 'ZIPCode', 'StateName',"JobTitleText", "JobTypeText", "ClientName"], axis = 1)
+    if job_type == "Remote Jobs":
+        is_remote = True 
+        new_df = new_df[new_df['IsRemoteLocation']==is_remote]
+    elif job_type == "Non-Remote Jobs":
+        is_remote = False 
+        new_df = new_df[new_df['IsRemoteLocation']==is_remote]
+    return evaluate_model(new_df) 
+ 
+    
+def create_city_plot(df, city_name):
+    new_df = df.groupby(["Date", "CityName"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.drop(['Date',"CreatedDate",'ClientName','CategoryName', 'ZIPCode', 'StateName',"JobTitleText", "JobTypeText","IsRemoteLocation", "ClientName"], axis = 1)
+    data = new_df[new_df["CityName"]==city_name]     
+    return create_forecast(data)
+
+def create_prophet_city_plot(df, city_name):   
+    new_df = df.groupby(["Date", "CityName"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.drop(['Date',"CreatedDate",'ClientName','CategoryName', 'ZIPCode', 'StateName',"JobTitleText", "JobTypeText","IsRemoteLocation", "ClientName"], axis = 1)
+    data = new_df[new_df["CityName"]== city_name]
+    return evaluate_model(data) 
+
+ 
+def create_job_title_plot(df, job_title):
+    new_df = df.groupby(["Date","JobTitleText"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.drop(['ClientName','Date','CreatedDate','CategoryName', 'ClientName','JobTypeText', 'IsRemoteLocation'], axis = 1)
+    data = new_df[new_df["JobTitleText"]==job_title]
+    return create_forecast(data)
+
+
+
+def create_prophet_jobtitle_plot(df, job_title):       
+    new_df = df.groupby(["Date","JobTitleText"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.drop(['ClientName','Date','CreatedDate','CategoryName', 'ClientName','JobTypeText', 'IsRemoteLocation'], axis = 1)
+    data = new_df[new_df["JobTitleText"]==job_title]
+    return evaluate_model(data) 
+    
+
+def create_client_plot(df, client_name):
+    
+    new_df = df.groupby(["Date", "ClientName", "CategoryName"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df =new_df.groupby([new_df.index,"ClientName"]).sum().reset_index()
+    new_df = new_df.rename(columns = {new_df.columns[0]:"Date"} )
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.drop(["Date","CreatedDate", "JobTitleText", "JobTypeText","IsRemoteLocation"], axis = 1)
+    data = new_df[new_df["ClientName"]== client_name]
+    return create_forecast(data) 
+    
+
+def create_prophet_client_plot(df, client_name):
+    new_df = df.groupby(["Date", "ClientName", "CategoryName"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df =new_df.groupby([new_df.index,"ClientName"]).sum().reset_index()
+    new_df = new_df.rename(columns = {new_df.columns[0]:"Date"} )
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.drop(["Date","CreatedDate", "JobTitleText", "JobTypeText","IsRemoteLocation"], axis = 1)
+    data = new_df[new_df["ClientName"]== client_name]
+    return evaluate_model(data) 
+    
 def evaluate_model(data):   
     data = data.iloc[:,1]
     data = pd.DataFrame(data)
@@ -39,7 +207,7 @@ def evaluate_model(data):
     try:
         model.fit(data)
     except ValueError:
-        st.write("Not Enough Data Found")
+        st.warning("Not Enough Data Found")
     else:
     
         forecast = model.make_future_dataframe(12, freq = "M")  
@@ -58,14 +226,29 @@ def evaluate_model(data):
         ax.set_title("Variation Trends: ", size=8)
         ax.tick_params(axis="x", labelsize=12)
         ax.tick_params(axis="y", labelsize=12)
-        
         se = np.square(forecast.loc[:, 'yhat'] - data.loc[:, "y"])
         mse = np.mean(se)
-        st.write("Score: The lesser the better the projection.")
         rmse = np.sqrt(mse)
     
         #return fig_1, fig_2, rmse
-        st.write("Forecast Plot: ",fig_1) ,st.write("Component Plot: ",fig_2), st.write("RMSE:",rmse)
+        return st.write("Forecast Plot: ",fig_1) ,st.write("Component Plot: ",fig_2), st.write("RMSE:",rmse), st.caption('RMSE Score is lower the better.')
+
+
+
+def get_text_titles(lis):
+    
+    s = ''
+    for i in lis:
+        s += "- " + i + "\n" 
+    return st.markdown(s), st.info("Use the JobTitles bar to search for the Requirement Forecasting")
+
+def get_text_citynames(lis):
+    
+    s = ''
+    for i in lis:
+        s += "- " + i + "\n" 
+    return st.markdown(s), st.info("Use the Cities bar to search for the Requirement Forecasting")
+
 
 #@st.cache
 def create_forecast(data):
@@ -78,7 +261,7 @@ def create_forecast(data):
     try:
         model.fit(data)
     except ValueError:
-        st.write("Not Enough Data Found")
+        st.warning("Not Enough Data Found")
     else:
         
         forecast = model.make_future_dataframe(12, freq = "M")  
@@ -115,123 +298,6 @@ def create_forecast(data):
         )
         
         st.plotly_chart(fig)
-    
-
-#@st.cache(persist=True, allow_output_mutation=True,suppress_st_warning=True)
-def create_remote_plot(df, job_type):
-    new_df = df.groupby(["Date", "IsRemoteLocation"]).count()
-    new_df = new_df.reset_index()
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df = new_df.drop(['Date',"CreatedDate",'ClientName','CategoryName','CityName', 'ZIPCode', 'StateName',"JobTitleText", "JobTypeText", "ClientName"], axis = 1)
-    if job_type == "Remote Jobs":
-        is_remote = True 
-        new_df = new_df[new_df['IsRemoteLocation']==is_remote]
-    elif job_type == "Non-Remote Jobs":
-        is_remote = False 
-        new_df = new_df[new_df['IsRemoteLocation']==is_remote]
-    return create_forecast(new_df)
-    
-
-    
-#@st.cache(persist=True, allow_output_mutation=True, suppress_st_warning=True)
-def create_prophet_remote_plot(df, is_remote):
-    new_df = df.groupby(["Date", "IsRemoteLocation"]).count()
-    new_df = new_df.reset_index()
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df = new_df.drop(['Date',"CreatedDate",'ClientName','CategoryName','CityName', 'ZIPCode', 'StateName',"JobTitleText", "JobTypeText", "ClientName"], axis = 1)
-    if job_type == "Remote Jobs":
-        is_remote = True 
-        new_df = new_df[new_df['IsRemoteLocation']==is_remote]
-    elif job_type == "Non-Remote Jobs":
-        is_remote = False 
-        new_df = new_df[new_df['IsRemoteLocation']==is_remote]
-    return evaluate_model(new_df) 
-    #return st.write("Forecast Plot: ",fig_1) ,st.write("Component Plot: ",fig_2), st.write("RMSE:",rmse)
-
-    
-
-#@st.cache(show_spinner=False,suppress_st_warning=True)
-def create_city_plot(new_df, city_name):
-    new_df = df.groupby(["Date", "CityName"]).count()
-    new_df = new_df.reset_index()
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df = new_df.drop(['Date',"CreatedDate",'ClientName','CategoryName', 'ZIPCode', 'StateName',"JobTitleText", "JobTypeText","IsRemoteLocation", "ClientName"], axis = 1)
-    data = new_df[new_df["CityName"]==city_name]
-    return create_forecast(data)
-
-#@st.cache(show_spinner=False, suppress_st_warning=True)
-def create_prophet_city_plot(df, city_name):   
-    new_df = df.groupby(["Date", "CityName"]).count()
-    new_df = new_df.reset_index()
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df = new_df.drop(['Date',"CreatedDate",'ClientName','CategoryName', 'ZIPCode', 'StateName',"JobTitleText", "JobTypeText","IsRemoteLocation", "ClientName"], axis = 1)
-    data = new_df[new_df["CityName"]== city_name]
-    return evaluate_model(data) 
-    #return st.write("Forecast Plot: ",fig_1) ,st.write("Component Plot: ",fig_2), st.write("RMSE:",rmse)
-
-
-#@st.cache(show_spinner=False,suppress_st_warning=True )     
-def create_job_title_plot(df, job_title):
-    new_df = df.groupby(["Date","JobTitleText"]).count()
-    new_df = new_df.reset_index()
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df = new_df.drop(['ClientName','Date','CreatedDate','CategoryName', 'ClientName','JobTypeText', 'IsRemoteLocation'], axis = 1)
-    data = new_df[new_df["JobTitleText"]==job_title]
-    return create_forecast(data)
-
-
-#@st.cache(show_spinner=False, suppress_st_warning=True)
-def create_prophet_jobtitle_plot(df, job_title):
-       
-    new_df = df.groupby(["Date","JobTitleText"]).count()
-    new_df = new_df.reset_index()
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df = new_df.drop(['ClientName','Date','CreatedDate','CategoryName', 'ClientName','JobTypeText', 'IsRemoteLocation'], axis = 1)
-    data = new_df[new_df["JobTitleText"]==job_title]
-    return evaluate_model(data) 
-    #return st.write("Forecast Plot: ",fig_1) ,st.write("Component Plot: ",fig_2), st.write("RMSE:",rmse)
-
-
-#@st.cache(show_spinner=False,suppress_st_warning=True)
-def create_client_plot(df, client_name):
-    
-    new_df = df.groupby(["Date", "ClientName", "CategoryName"]).count()
-    new_df = new_df.reset_index()
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df =new_df.groupby([new_df.index,"ClientName"]).sum().reset_index()
-    new_df = new_df.rename(columns = {new_df.columns[0]:"Date"} )
-    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df = new_df.drop(["Date","CreatedDate", "JobTitleText", "JobTypeText","IsRemoteLocation"], axis = 1)
-    data = new_df[new_df["ClientName"]== client_name]
-    return create_forecast(data)
-    
-
-#@st.cache(show_spinner=False, suppress_st_warning=True)
-def create_prophet_client_plot(df, client_name):
-    new_df = df.groupby(["Date", "ClientName", "CategoryName"]).count()
-    new_df = new_df.reset_index()
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df =new_df.groupby([new_df.index,"ClientName"]).sum().reset_index()
-    new_df = new_df.rename(columns = {new_df.columns[0]:"Date"} )
-    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df = new_df.drop(["Date","CreatedDate", "JobTitleText", "JobTypeText","IsRemoteLocation"], axis = 1)
-    data = new_df[new_df["ClientName"]== client_name]
-    return evaluate_model(data) 
-    #return st.write("Forecast Plot: ",fig_1) ,st.write("Component Plot: ",fig_2), st.write("RMSE:",rmse)
 
 @st.cache(ttl=24*60*60 )
 def get_citynames():
@@ -249,41 +315,13 @@ def get_remotedata(ttl=24*60*60):
        
 if __name__ == '__main__':
         
-    hide_menu_style = """
-        <style>
-        #MainMenu {visibility: hidden;}
-        footer{visibility:hidden;}
-
-    footer{
-    }
-       visibility:visible;
-        footer:after{
     
-        content:'Copyright@2021:Streamlit';
-        display:block;
-        position:relative;
-        color:tomato;
-        padding:5px;
-        top:3px;
-        
-        viewerBadge_container__1QSob {
-        z-index: 50;
-        font-size: .875rem;
-        position: fixed;
-        bottom: 0;
-        right: 0;
-        display: none;
-}
-    }
-        </style>
-        """
-    st.markdown(hide_menu_style, unsafe_allow_html=True)
     tab = st.sidebar.selectbox("What do you want to Search ?" ,
                                ("Remote Jobs","Cities", "Job Titles", "Rangam Clients"))
     try:
         df = fetch_data()
     except:
-        st.write("Unable to Fetch Data, Please Contact Rangam")
+        st.warning("Unable to Fetch Data, Please Contact Rangam")
     else:
         #with tab1:
         if tab == "Cities":
@@ -295,8 +333,11 @@ if __name__ == '__main__':
             #city_name = st.text_input("Enter City Name", value.strip())
             st.write("Selected Option",city_name)
             create_city_plot(df, city_name)
+            with st.expander("Check Top Job Requirements for these Cities"):
+                
+                get_text_titles(get_titles_cities(df, city_name))
             with st.expander("See explanation for Job Forecasting For Cities"):
-                 create_prophet_city_plot(df, city_name)
+                create_prophet_city_plot(df, city_name)
         
         if tab == "Job Titles":
         #with tab2:
@@ -321,6 +362,8 @@ if __name__ == '__main__':
             #client_name = st.text_input("Enter Rangam Clients", value.strip())
             st.write("Selected Option",client_name)
             create_client_plot(df, client_name)
+            with st.expander("Check Job Requirements for these Clients"):
+                get_text_titles(get_titles_clients(df, client_name))
             with st.expander("See explanation for Job Forecasting For Rangam Clients"):
                  create_prophet_client_plot(df, client_name)
                  
@@ -335,8 +378,18 @@ if __name__ == '__main__':
             #if job_type == "Remote Jobs"
             st.session_state.load_state = False
             create_remote_plot(get_remotedata(), job_type)
+            with st.expander("Check Top Cities and Job Titles for Remote Jobs"): 
+                titles, citynames = st.columns(2)
+                with titles:
+                    st.title("Top Jobs:")
+                    get_text_titles(get_title_remote(df, job_type))
+                    
+                with citynames: 
+                    st.title("Top Cities:")
+                    get_text_citynames( get_client_remote(df, job_type))
             with st.expander("See explanation for Remote Jobs"):
                  create_prophet_remote_plot(get_remotedata(), job_type)
+            
                      
     
     
