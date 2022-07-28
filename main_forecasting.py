@@ -252,6 +252,19 @@ if __name__ == '__main__':
     hide_menu_style = """
         <style>
         #MainMenu {visibility: hidden;}
+        
+    footer{
+    }
+       visibility:visible;
+    footer:after{
+    
+        content:'Copyright@2021:Streamlit';
+        display:block;
+        position:relative;
+        color:tomato;
+        padding:5px;
+        top:3px;
+    }
         </style>
         """
     st.markdown(hide_menu_style, unsafe_allow_html=True)
