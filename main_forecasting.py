@@ -23,16 +23,12 @@ def convert_negative(num):
         return 0
     else:
         return num
-    
-
-from geopy.exc import GeocoderTimedOut
+   
 @st.cache(ttl=24*60*60)
 def findGeocode(city):
-	try:
-		geolocator = Nominatim(user_agent="your_app_name")
-		return geolocator.geocode(city)
-	except GeocoderTimedOut:
-		return findGeocode(city)		
+	geolocator = Nominatim(user_agent="your_app_name")
+	return geolocator.geocode(city)
+			
 
 
 @st.cache(ttl=24*60*60)
