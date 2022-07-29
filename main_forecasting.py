@@ -251,7 +251,7 @@ def create_prophet_client_plot(df, client_name):
     data = new_df[new_df["ClientName"]== client_name]
     return evaluate_model(data) 
  
- def get_text(lis):    
+def get_text(lis):    
     s = ''
     for i in lis:
         s += "- " + i + "\n" 
