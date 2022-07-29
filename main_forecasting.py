@@ -73,7 +73,7 @@ def get_top_cities(df):
     new_df = df.groupby(["CityName"]).count()
     new_df = new_df.loc[:, ["RequirementID"]]
     new_df = new_df.sort_values(ascending = False, by = "RequirementID")
-    citynames = new_df.index.tolist()
+    citynames = new_df.index.tolist()[:50]
     
     for i in citynames:
         if findGeocode(i) != None:
