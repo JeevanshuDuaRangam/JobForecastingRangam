@@ -386,15 +386,12 @@ if __name__ == '__main__':
             
         if tab == "Home":
             metric = st.columns(1)
-            
-            #with metric:
+
             st.title("Status for Remote Jobs")
+            perc = get_metric_remote(df)
             with st.expander("Status for Remote Jobs"):
-                
-                st.metric("Remote Jobs","{0}%".format(get_metric_remote(df)) )
-        #top_cities = st.columns(1)
+                st.markdown("### Remote Jobs", perc) 
         
-        #with top_cities:
             st.title("Top Cities")
             with st.container():
                 st.map(get_top_cities(df))
