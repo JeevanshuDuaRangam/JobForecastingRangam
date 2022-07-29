@@ -402,7 +402,7 @@ if __name__ == '__main__':
         
             st.title("Top Cities")
             with st.container():
-                st.map(get_top_cities(df), zoom = 2)
+                st.map(get_top_cities(df), zoom = 1)
 
             st.title("Top Clients")    
             with st.container():
