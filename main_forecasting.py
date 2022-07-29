@@ -15,19 +15,12 @@ from prophet import Prophet
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from geopy.geocoders import Nominatim
 
 def convert_negative(num):
     if num<0:
         return 0
     else:
         return num
-   
-def findGeocode(city):
-	geolocator = Nominatim(user_agent="your_app_name")
-	return geolocator.geocode(city)
-			
-
 
 @st.cache(ttl=24*60*60)
 def fetch_data():
@@ -63,24 +56,13 @@ def get_top_clients(df):
     return create_pie_chart(new_df, "RequirementID", "ClientName" )
 
 def get_top_cities(df):
-    longitude = []
-    latitude = []
-    new_df = df.groupby(["CityName"]).count()
+    new_df = df.groupby(["CityName", "Latitude", "Longitude"]).count()
     new_df = new_df.loc[:, ["RequirementID"]]
     new_df = new_df.sort_values(ascending = False, by = "RequirementID")
-    citynames = new_df.index.tolist()[:5]
-    
-    for i in citynames:
-        if findGeocode(i) != None:
-             loc = findGeocode(i)
-             latitude.append(loc.latitude)
-             longitude.append(loc.longitude)
-        else:
-            latitude.append(np.nan)
-            longitude.append(np.nan)
-        
-    data = pd.DataFrame({"lat":latitude, "lon": longitude})
-    return data
+    new_df = new_df.reset_index()
+    new_df = new_df.drop(["CityName","RequirementID"], axis = 1)
+    new_df.columns = ["lat", "lon"]
+    return new_df
     
 def get_title_remote(df, job_type):
     new_df = df.groupby(["Date", "IsRemoteLocation"]).count()
@@ -99,8 +81,9 @@ def get_title_remote(df, job_type):
         new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
         new_df = new_df.groupby(["JobTitleText"]).count()
         new_df = new_df["RequirementID"].sort_values(ascending = False)
-        titles = new_df.index.tolist()[:5]
-    return titles
+        new_df = new_df.reset_index()
+        new_df = new_df.iloc[:10,:]
+        return create_pie_chart(new_df, "RequirementID", "JobTitleText" )
 
 def get_client_remote(df, job_type):
     new_df = df.groupby(["Date", "IsRemoteLocation"]).count()
@@ -119,8 +102,9 @@ def get_client_remote(df, job_type):
         new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
         new_df = new_df.groupby(["ClientName"]).count()
         new_df = new_df["RequirementID"].sort_values(ascending = False)
-        client_names = new_df.index.tolist()[:5]
-    return client_names
+        new_df = new_df.reset_index()
+        new_df = new_df.iloc[:10,:]
+        return create_pie_chart(new_df, "RequirementID", "ClientName" )
     
 def get_titles_cities(df, city_name):
     new_df = df.groupby(["Date", "CityName", "JobTitleText"]).count()
@@ -132,8 +116,9 @@ def get_titles_cities(df, city_name):
     new_df = new_df[new_df["CityName"]==city_name]
     new_df = new_df.groupby(["JobTitleText"]).count()
     new_df = new_df.sort_values(by = "RequirementID", ascending = False)
-    titles = new_df.index.tolist()[:5]
-    return titles
+    new_df = new_df.reset_index()
+    new_df = new_df.iloc[:10,:]
+    return create_pie_chart(new_df, "RequirementID", "JobTitleText" )
 
 def get_titles_clients(df, client_name):
     new_df = df.groupby(["Date", "ClientName", "JobTitleText"]).count()
@@ -145,8 +130,9 @@ def get_titles_clients(df, client_name):
     new_df = new_df[new_df["ClientName"]==client_name]
     new_df = new_df.groupby(["JobTitleText"]).count()
     new_df = new_df.sort_values(by = "RequirementID", ascending = False)
-    titles = new_df.index.tolist()[:5]
-    return titles
+    new_df = new_df.reset_index()
+    new_df = new_df.iloc[:10,:]
+    return create_pie_chart(new_df, "RequirementID", "JobTitleText" )
 
 def get_clients_titles(df, job_title):
     
@@ -159,8 +145,9 @@ def get_clients_titles(df, job_title):
     new_df = new_df[new_df["JobTitleText"]==job_title]
     new_df = new_df.groupby(["ClientName"]).count()
     new_df = new_df.sort_values(by = "RequirementID", ascending = False)
-    clientnames = new_df.index.tolist()[:5]   
-    return clientnames
+    new_df = new_df.reset_index()
+    new_df = new_df.iloc[:10,:]
+    return create_pie_chart(new_df, "RequirementID", "ClientName" )
 
 
 def create_pie_chart(df, values, names):
@@ -307,17 +294,13 @@ def evaluate_model(data):
 
 
 
-def get_text(lis):
-    
+def get_text(lis):    
     s = ''
     for i in lis:
         s += "- " + i + "\n" 
     return st.markdown(s)
 
 
-
-
-#@st.cache
 def create_forecast(data):
     data = data.iloc[:,1]
     data = pd.DataFrame(data)
@@ -364,7 +347,7 @@ def create_forecast(data):
         bargroupgap=0.1 # gap between bars of the same location coordinate.
         )
         
-        st.plotly_chart(fig)
+        return st.plotly_chart(fig)
 
 @st.cache(ttl=24*60*60 )
 def get_citynames():
@@ -415,23 +398,18 @@ if __name__ == '__main__':
             st.title("Top Cities")
             with st.container():
                 st.map(get_top_cities(df))
+
+            st.title("Top Clients")    
+            with st.container():
                 
-                
-            top_clients, top_jobs = st.columns((1,1))
+                st.plotly_chart(get_top_clients(df))
+                st.info("Use the Clients bar to search for the Requirement Forecasting")
+
+            st.title("Top Jobs")
+            with st.container():
+                st.plotly_chart(get_top_job_titles(df))
+                st.info("Use the JobTitles bar to search for the Requirement Forecasting")
             
-            with top_clients:
-                st.title("Top Clients")    
-                with st.expander("Top Clients"):
-                    
-                    st.plotly_chart(get_top_clients(df))
-                    st.info("Use the Clients bar to search for the Requirement Forecasting")
-                
-            with top_jobs:
-                st.title("Top Jobs")
-                with st.expander("Top Jobs"):
-                    st.plotly_chart(get_top_job_titles(df))
-                    st.info("Use the JobTitles bar to search for the Requirement Forecasting")
-                
         if tab == "Cities":
             city_name = str()
             st.title("Job Forecasting Based on Cities")
@@ -442,7 +420,7 @@ if __name__ == '__main__':
             st.write("Selected Option",city_name)
             create_city_plot(df, city_name)
             with st.expander("Check Top Job Requirements for these Cities"):
-                get_text(get_titles_cities(df, city_name))
+                st.plotly_chart(get_titles_cities(df, city_name))
                 st.info("Use the JobTitles bar to search for the Requirement Forecasting")
             with st.expander("See explanation for Job Forecasting For Cities"):
                 create_prophet_city_plot(df, city_name)
@@ -458,7 +436,7 @@ if __name__ == '__main__':
             st.write("Selected Option",job_title)
             create_job_title_plot(df, job_title)
             with st.expander("Check Top Job Requirements for these Cities"):   
-                 get_text(get_clients_titles(df, job_title))
+                 st.plotly_chart(get_clients_titles(df, job_title))
                  st.info("Use the Clients bar to search for the Requirement Forecasting")
             with st.expander("See explanation for Job Forecasting For Job Titles"):
                  create_prophet_jobtitle_plot(df, job_title)
@@ -474,7 +452,7 @@ if __name__ == '__main__':
             st.write("Selected Option",client_name)
             create_client_plot(df, client_name)
             with st.expander("Check Job Requirements for these Clients"):
-                get_text(get_titles_clients(df, client_name))
+                st.plotly_chart(get_titles_clients(df, client_name))
                 st.info("Use the JobTitles bar to search for the Requirement Forecasting")
             with st.expander("See explanation for Job Forecasting For Rangam Clients"):
                  create_prophet_client_plot(df, client_name)
@@ -499,14 +477,14 @@ if __name__ == '__main__':
             create_remote_plot(get_remotedata(), job_type)
             
             with st.expander("Check Top Clients and Job Titles for Remote Jobs"): 
-                titles, citynames = st.columns(2)
-                with titles:
+                
+                with st.container():
                     st.title("Top Jobs:")
-                    get_text(get_title_remote(df, job_type))
+                    st.plotly_chart(get_title_remote(df, job_type))
                     st.info("Use the JobTitles bar to search for the Requirement Forecasting")
-                with citynames: 
+                with st.container():
                     st.title("Top Clients:")
-                    get_text( get_client_remote(df, job_type))
+                    st.plotly_chart(get_client_remote(df, job_type))
                     st.info("Use the Clients bar to search for the Requirement Forecasting")
             with st.expander("See explanation for Remote Jobs"):
                  create_prophet_remote_plot(get_remotedata(), job_type)
