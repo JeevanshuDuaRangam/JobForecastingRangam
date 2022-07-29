@@ -418,8 +418,8 @@ if __name__ == '__main__':
         if tab == "Cities":
             city_name = str()
             st.title("Job Forecasting Based on Cities")
-            city_names = list(get_citynames())
-            city_names.append("Select")
+            city_names = sorted(list(get_citynames()))
+            city_names.insert(0,"Select")
             city_name = st.selectbox('Select City name: ', city_names, index = city_names.index("Select"))
             st.write("Selected Option",city_name)
             create_city_plot(df, city_name)
@@ -433,8 +433,8 @@ if __name__ == '__main__':
         if tab == "Job Titles":
             job_title = str()
             st.title("Job Forecasting Based on Job Titles: ")  
-            job_titles = list(get_jobtitles())   
-            job_titles.append("Select")         
+            job_titles = sorted(list(get_jobtitles())) 
+            job_titles.insert(0,"Select")      
             job_title = st.selectbox('Select JobTitle: ', job_titles, index = job_titles.index("Select"))
             st.write("Selected Option",job_title)
             create_job_title_plot(df, job_title)
@@ -449,8 +449,8 @@ if __name__ == '__main__':
         
             client_name = str()
             st.title("Job Forecasting Based on Rangam Clients: ")
-            client_names = list(get_clientnames())
-            client_names.append("Select")
+            client_names = sorted(list(get_clientnames()))
+            client_names.insert(0,"Select")
             client_name = st.selectbox('Select Rangam Clients', client_names, index = client_names.index("Select"))
             st.write("Selected Option",client_name)
             create_client_plot(df, client_name)
