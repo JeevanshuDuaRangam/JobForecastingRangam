@@ -390,7 +390,7 @@ if __name__ == '__main__':
             st.title("Status for Remote Jobs")
             perc = get_metric_remote(df)
             with st.expander("Status for Remote Jobs"):
-                st.metric("Remote Jobs", perc) 
+                st.metric("Remote Jobs", "{0}%".format(perc)) 
         
             st.title("Top Cities")
             with st.container():
