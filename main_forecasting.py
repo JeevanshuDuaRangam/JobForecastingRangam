@@ -149,7 +149,7 @@ def get_clients_titles(df, job_title):
     new_df = new_df.iloc[:10,:]
     return create_pie_chart(new_df, "RequirementID", "ClientName" )
 
-    
+
 def create_remote_plot(df, job_type):
     new_df = df.groupby(["Date", "IsRemoteLocation"]).count()
     new_df = new_df.reset_index()
@@ -250,19 +250,30 @@ def create_prophet_client_plot(df, client_name):
     new_df = new_df.drop(["Date","CreatedDate", "JobTitleText", "JobTypeText","IsRemoteLocation"], axis = 1)
     data = new_df[new_df["ClientName"]== client_name]
     return evaluate_model(data) 
- 
-def get_text(lis):    
-    s = ''
-    for i in lis:
-        s += "- " + i + "\n" 
-    return st.markdown(s)
 
+    
+def create_pie_chart(df, values, names):
+    labels = df[names]
+    values = df[values]
+    
+    fig = go.Figure(data=[go.Pie(labels=labels, values=values, textinfo='label+percent',
+                             insidetextorientation='radial', textposition='outside'
+                            )])
+    
+    fig.update_layout(
+    showlegend = False,
+    autosize=False,
+    width=600,
+    height=600)
+
+    
+    return fig
+     
 def evaluate_model(data):   
     data = data.iloc[:,1]
     data = pd.DataFrame(data)
     data = data.reset_index()
     data.columns = ["ds", "y"]
-    #data["y"] = data["y"].apply(np.log)
     model = Prophet()
     try:
         model.fit(data)
@@ -290,25 +301,22 @@ def evaluate_model(data):
         mse = np.mean(se)
         rmse = np.sqrt(mse)
     
-        #return fig_1, fig_2, rmse
         return st.write("Forecast Plot: ",fig_1) ,st.write("Component Plot: ",fig_2), st.write("RMSE:",rmse), st.caption('RMSE Score is lower the better.')
 
 
-def create_pie_chart(df, values, names):
-    labels = df[names]
-    values = df[values]
-    
-    fig = go.Figure(data=[go.Pie(labels=labels, values=values, textinfo='label+percent',
-                             insidetextorientation='radial'
-                            )])
-    return fig
+
+def get_text(lis):    
+    s = ''
+    for i in lis:
+        s += "- " + i + "\n" 
+    return st.markdown(s)
+
 
 def create_forecast(data):
     data = data.iloc[:,1]
     data = pd.DataFrame(data)
     data = data.reset_index()
     data.columns = ["ds", "y"]
-    #data["y"] = data["y"].apply(np.log)
     model = Prophet()
     try:
         model.fit(data)
@@ -324,8 +332,6 @@ def create_forecast(data):
         forecast.columns = ["Date", "Requirements"]
         forecast = forecast.set_index(pd.DatetimeIndex(forecast['Date']))
         forecast = forecast.drop(["Date"], axis = 1)
-        fig = px.bar(forecast, text_auto='.2s', height=800, width = 1200)
-        fig.update_traces(textfont_size=12, textangle=0, textposition="outside", cliponaxis=False)
         fig = go.Figure(data=[go.Bar(x= forecast.index, y=forecast.iloc[:,0],
             hovertext=["Requirements","Requirements","Requirements","Requirements",
             "Requirements","Requirements","Requirements","Requirements","Requirements",
@@ -343,6 +349,7 @@ def create_forecast(data):
             y=1.0,
             bgcolor='rgba(255, 255, 255, 0)',
             bordercolor='rgba(255, 255, 255, 0)'
+           
         ),
         barmode='group',
         bargap=0.15, # gap between bars of adjacent location coordinates.
@@ -384,10 +391,9 @@ if __name__ == '__main__':
     except:
         st.warning("Unable to Fetch Data, Please Contact Rangam")
     else:
-        #with tab1:
-            
+               
         if tab == "Home":
-            metr = st.columns(1)
+            
 
             st.title("Status for Remote Jobs")
             perc = get_metric_remote(df)
@@ -396,7 +402,7 @@ if __name__ == '__main__':
         
             st.title("Top Cities")
             with st.container():
-                st.map(get_top_cities(df), zoom = 1)
+                st.map(get_top_cities(df), zoom = 4)
 
             st.title("Top Clients")    
             with st.container():
@@ -415,76 +421,64 @@ if __name__ == '__main__':
             city_names = list(get_citynames())
             city_names.append("Select")
             city_name = st.selectbox('Select City name: ', city_names, index = city_names.index("Select"))
-            #city_name = st.text_input("Enter City Name", value.strip())
             st.write("Selected Option",city_name)
             create_city_plot(df, city_name)
-            with st.expander("Check Top Job Requirements for these Cities"):
+            st.title(("Check Top Job Requirements for these Cities"))
+            with st.container():
                 st.plotly_chart(get_titles_cities(df, city_name))
                 st.info("Use the JobTitles bar to search for the Requirement Forecasting")
             with st.expander("See explanation for Job Forecasting For Cities"):
                 create_prophet_city_plot(df, city_name)
         
         if tab == "Job Titles":
-        #with tab2:
             job_title = str()
             st.title("Job Forecasting Based on Job Titles: ")  
             job_titles = list(get_jobtitles())   
             job_titles.append("Select")         
             job_title = st.selectbox('Select JobTitle: ', job_titles, index = job_titles.index("Select"))
-            #job_title = st.text_input("Enter Job Title", value.strip())
             st.write("Selected Option",job_title)
             create_job_title_plot(df, job_title)
-            with st.expander("Check Top Job Requirements for these Cities"):   
+            st.title("Check Top Job Requirements for these Cities")
+            with st.container():
                  st.plotly_chart(get_clients_titles(df, job_title))
                  st.info("Use the Clients bar to search for the Requirement Forecasting")
             with st.expander("See explanation for Job Forecasting For Job Titles"):
                  create_prophet_jobtitle_plot(df, job_title)
             
         if tab == "Rangam Clients":
-        #with tab3:
+        
             client_name = str()
             st.title("Job Forecasting Based on Rangam Clients: ")
             client_names = list(get_clientnames())
             client_names.append("Select")
             client_name = st.selectbox('Select Rangam Clients', client_names, index = client_names.index("Select"))
-            #client_name = st.text_input("Enter Rangam Clients", value.strip())
             st.write("Selected Option",client_name)
             create_client_plot(df, client_name)
-            with st.expander("Check Job Requirements for these Clients"):
+            st.title("Check Job Requirements for these Clients")
+            with st.container():
                 st.plotly_chart(get_titles_clients(df, client_name))
                 st.info("Use the JobTitles bar to search for the Requirement Forecasting")
             with st.expander("See explanation for Job Forecasting For Rangam Clients"):
                  create_prophet_client_plot(df, client_name)
                  
         
-        if tab == "Remote Jobs":
-            #with tab4:
-            
+        if tab == "Remote Jobs":            
             job_type = "Remote Jobs"
-            #job_types = ["Remote Jobs", "Select"]
-            #job_type = st.selectbox('Select Rangam Clients', job_types, index = job_types.index("Select"))
-            #st.write("Selected Option",job_type)
-            #if job_type == "Remote Jobs"
-            
             st.session_state.load_state = False
             chrt,mtrc  = st.columns([4,1])
-            #with chrt:
-            #with mtrc:    
-            #st.metric("Remote Jobs","{0}%".format(get_metric_remote(df, job_type)) )
             st.title("Status for Work From Home Jobs")
-
             create_remote_plot(get_remotedata(), job_type)
-            
-            with st.expander("Check Top Clients and Job Titles for Remote Jobs"): 
-                
+            st.title("Check Top Clients and Job Titles for Remote Jobs")
+            with st.container():
+                st.title("Top Jobs:")
                 with st.container():
-                    st.title("Top Jobs:")
                     st.plotly_chart(get_title_remote(df, job_type))
-                    st.info("Use the JobTitles bar to search for the Requirement Forecasting")
+                st.info("Use the JobTitles bar to search for the Requirement Forecasting")
+            with st.container():
+                st.title("Top Clients:")
                 with st.container():
-                    st.title("Top Clients:")
                     st.plotly_chart(get_client_remote(df, job_type))
-                    st.info("Use the Clients bar to search for the Requirement Forecasting")
+                st.info("Use the Clients bar to search for the Requirement Forecasting")
             with st.expander("See explanation for Remote Jobs"):
                  create_prophet_remote_plot(get_remotedata(), job_type)
             
