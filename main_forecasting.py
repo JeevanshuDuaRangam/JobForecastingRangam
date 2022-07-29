@@ -12,8 +12,12 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from prophet import Prophet
+import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+from geopy.exc import GeocoderTimedOut
+from geopy.geocoders import Nominatim
+geolocator = Nominatim(user_agent="MyApp")
 
 def convert_negative(num):
     if num<0:
@@ -21,6 +25,16 @@ def convert_negative(num):
     else:
         return num
     
+
+@st.cache(ttl=24*60*60)
+def findGeocode(city):
+	try:
+		geolocator = Nominatim(user_agent="your_app_name")
+		return geolocator.geocode(city)
+	except GeocoderTimedOut:
+		return findGeocode(city)	
+
+
 @st.cache(ttl=24*60*60)
 def fetch_data():
 
@@ -28,32 +42,52 @@ def fetch_data():
     
     return df
 
-def get_titles_cities(df, city_name):
-    new_df = df.groupby(["Date", "CityName", "JobTitleText"]).count()
+def get_metric_remote(df):
+    new_df = df.groupby(["Date", "IsRemoteLocation"]).count()
     new_df = new_df.reset_index()
     new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
     new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
     new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df = new_df.loc[:, ["Date", "CityName", "JobTitleText", "RequirementID"]]
-    new_df = new_df[new_df["CityName"]==city_name]
-    new_df = new_df.groupby(["JobTitleText"]).count()
-    new_df = new_df.sort_values(by = "RequirementID", ascending = False)
-    titles = new_df.index.tolist()[:5]
-    return titles
-
-def get_titles_clients(df, client_name):
-    new_df = df.groupby(["Date", "ClientName", "JobTitleText"]).count()
+    new_df = new_df.drop(['Date',"CreatedDate",'ClientName','CategoryName','CityName', 'ZIPCode', 'StateName',"JobTitleText", "JobTypeText", "ClientName"], axis = 1)
+    perc = int(len(new_df[new_df['IsRemoteLocation']==True])/len(new_df)*100)
+    return perc
+    
+def get_top_job_titles(df):
+    new_df = df.groupby(["JobTitleText"]).count()
+    new_df = new_df.loc[:, ["RequirementID"]]
+    new_df = new_df.sort_values(ascending = False, by = "RequirementID")
     new_df = new_df.reset_index()
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
-    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
-    new_df = new_df.loc[:, ["Date", "ClientName", "JobTitleText", "RequirementID"]]
-    new_df = new_df[new_df["ClientName"]==client_name]
-    new_df = new_df.groupby(["JobTitleText"]).count()
-    new_df = new_df.sort_values(by = "RequirementID", ascending = False)
-    titles = new_df.index.tolist()[:5]
-    return titles
+    new_df = new_df.iloc[:10,:]
+    return create_pie_chart(new_df, "RequirementID", "JobTitleText" )
 
+def get_top_clients(df):
+    new_df = df.groupby(["ClientName"]).count()
+    new_df = new_df.loc[:, ["RequirementID"]]
+    new_df = new_df.sort_values(ascending = False, by = "RequirementID")
+    new_df = new_df.reset_index()
+    new_df = new_df.iloc[:10,:]
+    return create_pie_chart(new_df, "RequirementID", "ClientName" )
+
+def get_top_cities(df):
+    longitude = []
+    latitude = []
+    new_df = df.groupby(["CityName"]).count()
+    new_df = new_df.loc[:, ["RequirementID"]]
+    new_df = new_df.sort_values(ascending = False, by = "RequirementID")
+    citynames = new_df.index.tolist()[:50]
+    
+    for i in citynames:
+        if findGeocode(i) != None:
+             loc = findGeocode(i)
+             latitude.append(loc.latitude)
+             longitude.append(loc.longitude)
+        else:
+            latitude.append(np.nan)
+            longitude.append(np.nan)
+        
+    data = pd.DataFrame({"lat":latitude, "lon": longitude})
+    return data
+    
 def get_title_remote(df, job_type):
     new_df = df.groupby(["Date", "IsRemoteLocation"]).count()
     new_df = new_df.reset_index()
@@ -91,9 +125,54 @@ def get_client_remote(df, job_type):
         new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
         new_df = new_df.groupby(["ClientName"]).count()
         new_df = new_df["RequirementID"].sort_values(ascending = False)
-        city_names = new_df.index.tolist()[:5]
-    return city_names
+        client_names = new_df.index.tolist()[:5]
+    return client_names
     
+def get_titles_cities(df, city_name):
+    new_df = df.groupby(["Date", "CityName", "JobTitleText"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.loc[:, ["Date", "CityName", "JobTitleText", "RequirementID"]]
+    new_df = new_df[new_df["CityName"]==city_name]
+    new_df = new_df.groupby(["JobTitleText"]).count()
+    new_df = new_df.sort_values(by = "RequirementID", ascending = False)
+    titles = new_df.index.tolist()[:5]
+    return titles
+
+def get_titles_clients(df, client_name):
+    new_df = df.groupby(["Date", "ClientName", "JobTitleText"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.loc[:, ["Date", "ClientName", "JobTitleText", "RequirementID"]]
+    new_df = new_df[new_df["ClientName"]==client_name]
+    new_df = new_df.groupby(["JobTitleText"]).count()
+    new_df = new_df.sort_values(by = "RequirementID", ascending = False)
+    titles = new_df.index.tolist()[:5]
+    return titles
+
+def get_clients_titles(df, job_title):
+    
+    new_df = df.groupby(["Date","JobTitleText", "ClientName"]).count()
+    new_df = new_df.reset_index()
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df['Date'] = pd.to_datetime(new_df['Date'], format="%Y-%m")
+    new_df = new_df.set_index(pd.DatetimeIndex(new_df['Date']))
+    new_df = new_df.loc[:, ["Date", "ClientName", "JobTitleText", "RequirementID"]]
+    new_df = new_df[new_df["JobTitleText"]==job_title]
+    new_df = new_df.groupby(["ClientName"]).count()
+    new_df = new_df.sort_values(by = "RequirementID", ascending = False)
+    clientnames = new_df.index.tolist()[:5]   
+    return clientnames
+
+
+def create_pie_chart(df, values, names):
+    fig = px.pie(df, values= values, names= names,)
+    return fig
+     
 
 def create_remote_plot(df, job_type):
     new_df = df.groupby(["Date", "IsRemoteLocation"]).count()
@@ -157,7 +236,6 @@ def create_job_title_plot(df, job_title):
     new_df = new_df.drop(['ClientName','Date','CreatedDate','CategoryName', 'ClientName','JobTypeText', 'IsRemoteLocation'], axis = 1)
     data = new_df[new_df["JobTitleText"]==job_title]
     return create_forecast(data)
-
 
 
 def create_prophet_jobtitle_plot(df, job_title):       
@@ -235,19 +313,14 @@ def evaluate_model(data):
 
 
 
-def get_text_titles(lis):
+def get_text(lis):
     
     s = ''
     for i in lis:
         s += "- " + i + "\n" 
-    return st.markdown(s), st.info("Use the JobTitles bar to search for the Requirement Forecasting")
+    return st.markdown(s)
 
-def get_text_citynames(lis):
-    
-    s = ''
-    for i in lis:
-        s += "- " + i + "\n" 
-    return st.markdown(s), st.info("Use the Cities bar to search for the Requirement Forecasting")
+
 
 
 #@st.cache
@@ -272,7 +345,7 @@ def create_forecast(data):
         forecast.columns = ["Date", "Requirements"]
         forecast = forecast.set_index(pd.DatetimeIndex(forecast['Date']))
         forecast = forecast.drop(["Date"], axis = 1)
-        fig = px.bar(forecast, text_auto='.2s', height=800, width = 1000)
+        fig = px.bar(forecast, text_auto='.2s', height=800, width = 1200)
         fig.update_traces(textfont_size=12, textangle=0, textposition="outside", cliponaxis=False)
         fig = go.Figure(data=[go.Bar(x= forecast.index, y=forecast.iloc[:,0],
             hovertext=["Requirements","Requirements","Requirements","Requirements",
@@ -314,16 +387,57 @@ def get_remotedata(ttl=24*60*60):
 
        
 if __name__ == '__main__':
-        
+    
+    hide_streamlit_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    .reportview-container .main footer {visibility: hidden;}
+    </style>
+    
+    """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
     
     tab = st.sidebar.selectbox("What do you want to Search ?" ,
-                               ("Remote Jobs","Cities", "Job Titles", "Rangam Clients"))
+                               ("Home","Remote Jobs","Cities", "Job Titles", "Rangam Clients"))
     try:
         df = fetch_data()
     except:
         st.warning("Unable to Fetch Data, Please Contact Rangam")
     else:
         #with tab1:
+            
+        if tab == "Home":
+            metric = st.columns(1)
+            
+            #with metric:
+            st.title("Status for Remote Jobs")
+            with st.expander("Status for Remote Jobs"):
+                
+                st.metric("Remote Jobs","{0}%".format(get_metric_remote(df)) )
+        #top_cities = st.columns(1)
+        
+        #with top_cities:
+            st.title("Top Cities")
+            with st.container():
+                st.map(get_top_cities(df))
+                
+                
+            top_clients, top_jobs = st.columns((1,1))
+            
+            with top_clients:
+                st.title("Top Clients")    
+                with st.expander("Top Clients"):
+                    
+                    st.plotly_chart(get_top_clients(df))
+                    st.info("Use the Clients bar to search for the Requirement Forecasting")
+                
+            with top_jobs:
+                st.title("Top Jobs")
+                with st.expander("Top Jobs"):
+                    st.plotly_chart(get_top_job_titles(df))
+                    st.info("Use the JobTitles bar to search for the Requirement Forecasting")
+                
         if tab == "Cities":
             city_name = str()
             st.title("Job Forecasting Based on Cities")
@@ -334,8 +448,8 @@ if __name__ == '__main__':
             st.write("Selected Option",city_name)
             create_city_plot(df, city_name)
             with st.expander("Check Top Job Requirements for these Cities"):
-                
-                get_text_titles(get_titles_cities(df, city_name))
+                get_text(get_titles_cities(df, city_name))
+                st.info("Use the JobTitles bar to search for the Requirement Forecasting")
             with st.expander("See explanation for Job Forecasting For Cities"):
                 create_prophet_city_plot(df, city_name)
         
@@ -349,9 +463,12 @@ if __name__ == '__main__':
             #job_title = st.text_input("Enter Job Title", value.strip())
             st.write("Selected Option",job_title)
             create_job_title_plot(df, job_title)
+            with st.expander("Check Top Job Requirements for these Cities"):   
+                 get_text(get_clients_titles(df, job_title))
+                 st.info("Use the Clients bar to search for the Requirement Forecasting")
             with st.expander("See explanation for Job Forecasting For Job Titles"):
                  create_prophet_jobtitle_plot(df, job_title)
-        
+            
         if tab == "Rangam Clients":
         #with tab3:
             client_name = str()
@@ -363,38 +480,45 @@ if __name__ == '__main__':
             st.write("Selected Option",client_name)
             create_client_plot(df, client_name)
             with st.expander("Check Job Requirements for these Clients"):
-                get_text_titles(get_titles_clients(df, client_name))
+                get_text(get_titles_clients(df, client_name))
+                st.info("Use the JobTitles bar to search for the Requirement Forecasting")
             with st.expander("See explanation for Job Forecasting For Rangam Clients"):
                  create_prophet_client_plot(df, client_name)
                  
         
         if tab == "Remote Jobs":
             #with tab4:
-            st.title("Status for Work From Home Jobs")
+            
             job_type = "Remote Jobs"
             #job_types = ["Remote Jobs", "Select"]
             #job_type = st.selectbox('Select Rangam Clients', job_types, index = job_types.index("Select"))
             #st.write("Selected Option",job_type)
             #if job_type == "Remote Jobs"
+            
             st.session_state.load_state = False
+            chrt,mtrc  = st.columns([4,1])
+            #with chrt:
+            #with mtrc:    
+            #st.metric("Remote Jobs","{0}%".format(get_metric_remote(df, job_type)) )
+            st.title("Status for Work From Home Jobs")
+
             create_remote_plot(get_remotedata(), job_type)
-            with st.expander("Check Top Cities and Job Titles for Remote Jobs"): 
+            
+            with st.expander("Check Top Clients and Job Titles for Remote Jobs"): 
                 titles, citynames = st.columns(2)
                 with titles:
                     st.title("Top Jobs:")
-                    get_text_titles(get_title_remote(df, job_type))
-                    
+                    get_text(get_title_remote(df, job_type))
+                    st.info("Use the JobTitles bar to search for the Requirement Forecasting")
                 with citynames: 
-                    st.title("Top Cities:")
-                    get_text_citynames( get_client_remote(df, job_type))
+                    st.title("Top Clients:")
+                    get_text( get_client_remote(df, job_type))
+                    st.info("Use the Clients bar to search for the Requirement Forecasting")
             with st.expander("See explanation for Remote Jobs"):
                  create_prophet_remote_plot(get_remotedata(), job_type)
             
                      
-    
-    
-    
-     
+
     
     
 
