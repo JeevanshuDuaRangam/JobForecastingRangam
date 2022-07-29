@@ -15,7 +15,6 @@ from prophet import Prophet
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from geopy.exc import GeocoderTimedOut
 from geopy.geocoders import Nominatim
 geolocator = Nominatim(user_agent="MyApp")
 
@@ -31,7 +30,7 @@ def findGeocode(city):
 	try:
 		geolocator = Nominatim(user_agent="your_app_name")
 		return geolocator.geocode(city)
-	except GeocoderTimedOut:
+	except:
 		return findGeocode(city)	
 
 
