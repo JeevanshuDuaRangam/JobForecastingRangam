@@ -149,12 +149,7 @@ def get_clients_titles(df, job_title):
     new_df = new_df.iloc[:10,:]
     return create_pie_chart(new_df, "RequirementID", "ClientName" )
 
-
-def create_pie_chart(df, values, names):
-    fig = px.pie(df, values= values, names= names,)
-    return fig
-     
-
+    
 def create_remote_plot(df, job_type):
     new_df = df.groupby(["Date", "IsRemoteLocation"]).count()
     new_df = new_df.reset_index()
@@ -255,7 +250,13 @@ def create_prophet_client_plot(df, client_name):
     new_df = new_df.drop(["Date","CreatedDate", "JobTitleText", "JobTypeText","IsRemoteLocation"], axis = 1)
     data = new_df[new_df["ClientName"]== client_name]
     return evaluate_model(data) 
-    
+ 
+ def get_text(lis):    
+    s = ''
+    for i in lis:
+        s += "- " + i + "\n" 
+    return st.markdown(s)
+
 def evaluate_model(data):   
     data = data.iloc[:,1]
     data = pd.DataFrame(data)
@@ -293,13 +294,14 @@ def evaluate_model(data):
         return st.write("Forecast Plot: ",fig_1) ,st.write("Component Plot: ",fig_2), st.write("RMSE:",rmse), st.caption('RMSE Score is lower the better.')
 
 
-
-def get_text(lis):    
-    s = ''
-    for i in lis:
-        s += "- " + i + "\n" 
-    return st.markdown(s)
-
+def create_pie_chart(df, values, names):
+    labels = df[names]
+    values = df[values]
+    
+    fig = go.Figure(data=[go.Pie(labels=labels, values=values, textinfo='label+percent',
+                             insidetextorientation='radial'
+                            )])
+    return fig
 
 def create_forecast(data):
     data = data.iloc[:,1]
