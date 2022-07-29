@@ -16,7 +16,6 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from geopy.geocoders import Nominatim
-geolocator = Nominatim(user_agent="MyApp")
 
 def convert_negative(num):
     if num<0:
@@ -24,7 +23,6 @@ def convert_negative(num):
     else:
         return num
    
-@st.cache(ttl=24*60*60)
 def findGeocode(city):
 	geolocator = Nominatim(user_agent="your_app_name")
 	return geolocator.geocode(city)
