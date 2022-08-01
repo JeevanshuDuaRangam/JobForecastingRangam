@@ -27,19 +27,17 @@ def fetch_data():
     df = pd.read_csv(r"job_forecasting.csv")
     
     return df
+#Home Page
 
-
+#Get Top Categories
 def get_metric_category(df):
     new_df = df.groupby(["CategoryName"]).count()
     new_df = new_df.reset_index()
     new_df = new_df[["CategoryName", "RequirementID"]]
-    #perc = int(new_df[new_df["CategoryName"]==category_name].RequirementID/new_df.RequirementID.sum()*100)
-    
+    new_df = new_df.sort_values(by = "RequirementID", ascending = False)
+    new_df = new_df.reset_index()
     return create_bar_chart(new_df.CategoryName, new_df.RequirementID)
     
-
-#Home Page
-
 #Get Top Cities
 def get_top_cities(df):
     new_df = df.groupby(["CityName", "Latitude", "Longitude"]).count()
@@ -49,6 +47,14 @@ def get_top_cities(df):
     new_df = new_df.drop(["CityName","RequirementID"], axis = 1)
     new_df.columns = ["lat", "lon"]
     return new_df
+
+#Get Top Cities
+def get_category_by_title(df, job_title):
+    new_df = df[["CategoryName","RequirementID"]][df["JobTitleText"] == job_title]
+    new_df = new_df.groupby("CategoryName").sum()
+    new_df = new_df.sort_values(by = "RequirementID", ascending = False)
+    return create_bar_chart(new_df.CategoryName, new_df.RequirementID)
+
 
 #Get Top Job Titles
 def get_top_job_titles(df, low, high):
@@ -428,6 +434,9 @@ if __name__ == '__main__':
                  st.write('Range:',  int(str(values[0])), int(str(values[1])))
                  st.plotly_chart(get_clients_titles(df, job_title,  int(str(values[0])), int(str(values[1]))))
                  st.info("Use the Clients bar to search for the Requirement Forecasting")
+                 
+            with st.expander("Analyze the Requirements based on Rangam Category"):    
+                 st.plotly_chart(get_category_by_title(df, job_title))
             with st.expander("See explanation for Job Forecasting For Job Titles"):
                  create_prophet_jobtitle_plot(df, job_title)
             
