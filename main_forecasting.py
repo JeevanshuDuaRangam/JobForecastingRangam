@@ -53,6 +53,7 @@ def get_category_by_title(df, job_title):
     new_df = df[["CategoryName","RequirementID"]][df["JobTitleText"] == job_title]
     new_df = new_df.groupby("CategoryName").sum()
     new_df = new_df.sort_values(by = "RequirementID", ascending = False)
+    new_df = new_df.reset_index()
     return create_bar_chart(new_df.CategoryName, new_df.RequirementID)
 
 
@@ -211,7 +212,7 @@ def create_pie_chart(df, values, names, width=600, height=600):
     values = df[values]
     
     fig = go.Figure(data=[go.Pie(labels=labels, values=values, textinfo='label+percent',
-                             insidetextorientation='radial', textposition='outside'
+                             insidetextorientation='radial', textposition='outside', hole=.5
                             )])
     
     fig.update_layout(
