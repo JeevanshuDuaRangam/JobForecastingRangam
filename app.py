@@ -4,14 +4,6 @@ Created on Tue Aug  2 02:10:12 2022
 
 @author: Jeevanshudua
 """
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Jul 21 07:00:38 2022
-
-@author: Jeevanshudua
-"""
-
-
 
 import pandas as pd
 import streamlit as st
@@ -420,8 +412,8 @@ if __name__ == '__main__':
             create_city_plot(df, city_name)
             st.title(("Check Top Job Requirements for these Cities"))
             with st.container():
-                values = st.slider('Select a range of Top Jobs in the City',0, 100, (0,10))
-                st.write('Range:',  int(str(values[0])), int(str(values[1])))
+                values = st.slider('Select a range of Top Jobs in the City',0, 25, (0,10))
+                
                 st.plotly_chart(get_titles_cities(df, city_name,  int(str(values[0])), int(str(values[1]))))
                 st.info("Use the JobTitles bar to search for the Requirement Forecasting")
             with st.expander("See explanation for Job Forecasting For Cities"):
@@ -437,8 +429,8 @@ if __name__ == '__main__':
             create_job_title_plot(df, job_title)
             st.title("Check Top Job Requirements for these Cities")
             with st.container():
-                 values = st.slider('Select a range of Top Clients for the Jobs',0, 100, (0,10))
-                 st.write('Range:',  int(str(values[0])), int(str(values[1])))
+                 values = st.slider('Select a range of Top Clients for the Jobs',0, 25, (0,10))
+                 
                  st.plotly_chart(get_clients_titles(df, job_title,  int(str(values[0])), int(str(values[1]))))
                  st.info("Use the Clients bar to search for the Requirement Forecasting")
                  
@@ -458,8 +450,8 @@ if __name__ == '__main__':
             create_client_plot(df, client_name)
             st.title("Check Job Requirements for these Clients")
             with st.container():
-                values = st.slider('Select a range of Top Jobs for the Clients',0, 100, (0,10))
-                st.write('Range:',  int(str(values[0])), int(str(values[1])))
+                values = st.slider('Select a range of Top Jobs for the Clients',0, 25, (0,10))
+                
                 st.plotly_chart(get_titles_clients(df, client_name, int(str(values[0])), int(str(values[1]))))
                 st.info("Use the JobTitles bar to search for the Requirement Forecasting")
             with st.container():
