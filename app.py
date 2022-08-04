@@ -244,7 +244,9 @@ def create_bar_chart(x, y):
     ),
     barmode='group',
     bargap=0.15, # gap between bars of adjacent location coordinates.
-    bargroupgap=0.1 # gap between bars of the same location coordinate.
+    bargroupgap=0.1, # gap between bars of the same location coordinate.
+    width=670,
+    height=450
     )
     return fig
      
@@ -383,8 +385,8 @@ if __name__ == '__main__':
                 
         
             with st.expander("Top Cities"):
-            #with st.container():
-                st.map(get_top_cities(df), zoom = 1)
+                with st.container():
+                    st.map(get_top_cities(df), zoom = 1)
 
           
             with st.expander("Top Clients"):
