@@ -392,14 +392,14 @@ if __name__ == '__main__':
             with st.expander("Top Clients"):
             #with st.container():
                 range_clients = st.slider('Select a range of Top Clients',0, 100, (0,10))
-                st.write('Range:',range_clients)
+                
                 st.plotly_chart(get_top_clients(df,int(range_clients[0]), int(range_clients[1])))
                 st.info("Use the Clients bar to search for the Requirement Forecasting")
 
             with st.expander("Top Jobs"):
             #with st.container():
                 values = st.slider('Select a range of Top Jobs',0, 100, (0,10))
-                st.write('Range:', int(str(values[0])), int(str(values[1])))
+                
                 st.plotly_chart(get_top_job_titles(df, int(str(values[0])), int(str(values[1]))))
                 st.info("Use the JobTitles bar to search for the Requirement Forecasting")
                 
