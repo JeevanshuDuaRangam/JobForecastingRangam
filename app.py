@@ -356,6 +356,7 @@ def get_categories():
     return df.CategoryName.unique()
 
        
+
 if __name__ == '__main__':
     
     hide_streamlit_style = """
@@ -368,20 +369,19 @@ if __name__ == '__main__':
     """
     
     st.markdown(hide_streamlit_style, unsafe_allow_html=True) 
-    
-    tab = st.sidebar.selectbox("What do you want to Search ?" ,
-                               ("Home","Cities", "Job Titles", "Rangam Clients"))
+    tab1, tab2, tab3, tab4  = st.tabs(["Home","Cities", "Job Titles", "Rangam Clients"])
+    #tab = st.sidebar.selectbox("What do you want to Search ?" ,("Home","Cities", "Job Titles", "Rangam Clients"))
     try:
         df = fetch_data()
     except:
         st.warning("Unable to Fetch Data, Please Contact Rangam")
     else:
-               
-        if tab == "Home":
+        with tab1:     
+        #if tab == "Home":
             
             with st.expander("Status"):
-                
-                st.plotly_chart(get_metric_category(df))
+                with st.container():
+                    st.plotly_chart(get_metric_category(df))
                 
         
             with st.expander("Top Cities"):
@@ -391,20 +391,18 @@ if __name__ == '__main__':
           
             with st.expander("Top Clients"):
             #with st.container():
-                range_clients = st.slider('Select a range of Top Clients',0, 100, (0,10))
-                
+                range_clients = st.slider('Select a range of Top Clients',0, 25, (0,10))
                 st.plotly_chart(get_top_clients(df,int(range_clients[0]), int(range_clients[1])))
                 st.info("Use the Clients bar to search for the Requirement Forecasting")
 
             with st.expander("Top Jobs"):
             #with st.container():
-                values = st.slider('Select a range of Top Jobs',0, 100, (0,10))
-                
+                values = st.slider('Select a range of Top Jobs',0, 25, (0,10))
                 st.plotly_chart(get_top_job_titles(df, int(str(values[0])), int(str(values[1]))))
                 st.info("Use the JobTitles bar to search for the Requirement Forecasting")
                 
-        
-        if tab == "Cities":
+        with tab2:
+        #if tab == "Cities":
             city_name = str()
             st.title("Job Forecasting Based on Cities")
             city_names = list(get_citynames())
@@ -415,13 +413,13 @@ if __name__ == '__main__':
             st.title(("Check Top Job Requirements for these Cities"))
             with st.container():
                 values = st.slider('Select a range of Top Jobs in the City',0, 25, (0,10))
-                
                 st.plotly_chart(get_titles_cities(df, city_name,  int(str(values[0])), int(str(values[1]))))
                 st.info("Use the JobTitles bar to search for the Requirement Forecasting")
             with st.expander("See explanation for Job Forecasting For Cities"):
                 create_prophet_city_plot(df, city_name)
         
-        if tab == "Job Titles":
+        with tab3:
+        #if tab == "Job Titles":
             job_title = str()
             st.title("Job Forecasting Based on Job Titles: ")  
             job_titles = list(get_jobtitles())
@@ -432,7 +430,6 @@ if __name__ == '__main__':
             st.title("Check Top Job Requirements for these Cities")
             with st.container():
                  values = st.slider('Select a range of Top Clients for the Jobs',0, 25, (0,10))
-                 
                  st.plotly_chart(get_clients_titles(df, job_title,  int(str(values[0])), int(str(values[1]))))
                  st.info("Use the Clients bar to search for the Requirement Forecasting")
                  
@@ -441,7 +438,8 @@ if __name__ == '__main__':
             with st.expander("See explanation for Job Forecasting For Job Titles"):
                  create_prophet_jobtitle_plot(df, job_title)
             
-        if tab == "Rangam Clients":
+        with tab4:
+        #if tab == "Rangam Clients":
         
             client_name = str()
             st.title("Job Forecasting Based on Rangam Clients: ")
@@ -453,7 +451,6 @@ if __name__ == '__main__':
             st.title("Check Job Requirements for these Clients")
             with st.container():
                 values = st.slider('Select a range of Top Jobs for the Clients',0, 25, (0,10))
-                
                 st.plotly_chart(get_titles_clients(df, client_name, int(str(values[0])), int(str(values[1]))))
                 st.info("Use the JobTitles bar to search for the Requirement Forecasting")
             with st.container():
@@ -461,6 +458,7 @@ if __name__ == '__main__':
             
             with st.expander("See explanation for Job Forecasting For Rangam Clients"):
                  create_prophet_client_plot(df, client_name)
+                 
                  
         
 
