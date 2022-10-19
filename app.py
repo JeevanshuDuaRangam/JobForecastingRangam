@@ -13,7 +13,6 @@ import streamlit as st
 import numpy as np
 from prophet import Prophet
 import plotly.graph_objects as go
-import pyodbc
 from datetime import date
 
 
