@@ -18,18 +18,6 @@ from datetime import date
 
 
 
-#server = '3.19.197.204' 
-#database = 'SOURCEPROS' 
-#username = 'AI_Developer' 
-#password = 'Ripl@dev456' 
-#connection_string = 'DRIVER={ODBC Driver 11 for SQL Server}; SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password
-
-
-server = '192.168.5.29' 
-database = 'SOURCEPROS' 
-username = 'jeevanshu' 
-password = 'mar@2022' 
-connection_string = 'DRIVER={ODBC Driver 11 for SQL Server}; SERVER='+server+';DATABASE='+database+';UID='+username+';PWD='+ password
 
 
 def convert_negative(num):
@@ -39,7 +27,7 @@ def convert_negative(num):
         return num
 
 @st.cache(ttl=24*60*60)
-def fetch_data(connection_string = connection_string):
+def fetch_data():
     """
     
 
@@ -55,12 +43,8 @@ def fetch_data(connection_string = connection_string):
 
     """
     
-    cnxn = pyodbc.connect(connection_string)
-    Query = """
-    [USP_AI_GetAll_Forcasting_Requirements]
-    """
-    #cursor.execute(Query).fetchall()
-    df = pd.read_sql_query(Query, cnxn)
+    
+    df = pd.read_csv(r"job_forecasting.csv")
     df['CreatedDate'] = pd.to_datetime(df['CreatedDate'], format="%Y-%m")
     df['Date'] = df['CreatedDate'].map(lambda x: '{}-{}'.format(x.year, x.month))
     
